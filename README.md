@@ -1,4 +1,4 @@
-# Sistemas-No-Lineales
+# SISTEMAS NO LINEALES
 <html lang="es">
 <head>
     <meta charset="UTF-8">
