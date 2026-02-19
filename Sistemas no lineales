@@ -170,7 +170,6 @@
     </header>
 
     <main class="container mx-auto px-4 py-6">
-        
         <div id="screen-categories" class="max-w-6xl mx-auto animate-in fade-in duration-700">
             <div class="mb-10 text-center">
                 <h2 class="text-3xl font-black text-slate-900 tracking-tighter mb-3">Laboratorio de Álgebra Rigurosa</h2>
@@ -325,10 +324,11 @@
                         { q: "¿Elegir método?", opt: ["Sustitución", "Igualación", "Reducción"], ans: "Sustitución", show: "Método", label: "Sustitución", exp: "Sustituimos x = y + 1." },
                         { q: "Paso 1: Obtener la ecuación radical:", opt: ["√(y + 1) + y = 5", "√(y - 1) + y = 5"], ans: "√(y + 1) + y = 5", show: "Ec. Radical", label: "√(y+1) + y = 5", exp: "Reemplazo de x." },
                         { q: "Paso 2: Aislar la raíz cuadrada:", opt: ["√(y + 1) = 5 - y", "√(y + 1) = y - 5"], ans: "√(y + 1) = 5 - y", show: "Aislar", label: "√(y+1) = 5 - y", exp: "Trasposición." },
-                        { q: "Paso 3: Elevar al cuadrado y desarrollar identidad notable:", opt: ["y + 1 = 25 - 10y + y²", "y + 1 = 25 + y²"], ans: "y + 1 = 25 - 10y + y²", show: "Identidad", label: "y+1 = 25-10y+y²", exp: "(5-y)² = 25 - 10y + y²." },
-                        { q: "Paso 4: Resolver la ecuación:", opt: ["y = 3, y = 8", "y = 0"], ans: "y = 3, y = 8", show: "y", label: "y = 3, y = 8", exp: "y² - 11y + 24 = 0." },
-                        { q: "Paso 5: Comprobar soluciones:", opt: ["Solo y = 3 es válida", "Ambas"], ans: "Solo y = 3 es válida", show: "Comprobar", label: "y = 3 OK", exp: "√(4) + 3 = 5." },
-                        { q: "Paso 6: Calcular la otra incógnita x:", opt: ["x = 4", "x = 9"], ans: "x = 4", show: "x", label: "x = 4", exp: "x = 3 + 1 = 4." },
+                        { q: "Paso 3: Elevar al cuadrado para eliminar el radical:", opt: ["y + 1 = (5 - y)²", "y + 1 = 25 + y²"], ans: "y + 1 = (5 - y)²", show: "Elevación", label: "y+1 = (5-y)²", exp: "Correcto." },
+                        { q: "Paso 4: Desarrollar identidad notable:", opt: ["y + 1 = 25 - 10y + y²", "y + 1 = 25 + y²"], ans: "y + 1 = 25 - 10y + y²", show: "Identidad", label: "y+1 = 25-10y+y²", exp: "(5-y)²." },
+                        { q: "Paso 5: Resolver la ecuación:", opt: ["y = 3, y = 8", "y = 0"], ans: "y = 3, y = 8", show: "y", label: "y = 3, y = 8", exp: "y² - 11y + 24 = 0." },
+                        { q: "Paso 6: Comprobar soluciones:", opt: ["Solo y = 3 es válida", "Ambas"], ans: "Solo y = 3 es válida", show: "Comprobar", label: "y = 3 OK", exp: "√(4) + 3 = 5." },
+                        { q: "Paso 7: Calcular la otra incógnita x:", opt: ["x = 4", "x = 9"], ans: "x = 4", show: "x", label: "x = 4", exp: "x = 3 + 1 = 4." },
                         { q: "Paso Final: Elegir las soluciones con paréntesis:", opt: ["(4, 3)", "(3, 4)"], ans: "(4, 3)", show: "Final", label: "(4, 3)", exp: "Listo.", isLast: true }
                     ]},
                     { system: ["√x = y - 1", "x + y = 7"], steps: [
@@ -481,6 +481,7 @@
         }
 
         function formatMath(text) {
+            if (typeof text !== 'string') return text;
             let res = text.replace(/√\(([^)]+)\)/g, '<span class="sqrt"><span class="sqrt-symbol">√</span><span class="sqrt-content">$1</span></span>')
                           .replace(/√(\w)/g, '<span class="sqrt"><span class="sqrt-symbol">√</span><span class="sqrt-content">$1</span></span>');
             
@@ -517,7 +518,6 @@
             container.innerHTML = '';
             let displayOpts = [...opts];
             
-            // Si es racionales y el primer paso, nos aseguramos de que el método m.c.m esté presente
             if (state.stepIdx === 0) {
                 if (state.cat === 'racionales') {
                     displayOpts = ["Sustitución", "Igualación", "m.c.m. para quitar denominadores"];
@@ -540,14 +540,17 @@
             state.isLocked = true;
             const btnRef = e.currentTarget;
             let isCorrect = false;
+            
             if (Array.isArray(correctVal)) {
                 isCorrect = correctVal.some(v => selectedText === v || selectedText.includes(v));
             } else {
                 isCorrect = selectedText === correctVal;
             }
+            
             const feedbackUi = document.getElementById('feedback-ui');
             const feedbackMsg = document.getElementById('feedback-msg');
             const nextBtn = document.getElementById('btn-next-step');
+            
             if(isCorrect) {
                 btnRef.classList.add('btn-correct');
                 state.streak++;
@@ -556,8 +559,12 @@
                 feedbackUi.className = "mt-6 p-6 rounded-2xl border-l-[8px] bg-emerald-50 border-emerald-500 text-emerald-900";
                 feedbackMsg.innerHTML = step.exp;
                 addToBlackboard(`✔ ${step.show}: <b>${formatMath(step.label)}</b>`);
-                if(step.isLast) document.getElementById('congrats-modal').classList.remove('hidden');
-                else nextBtn.classList.remove('hidden');
+                
+                if(step.isLast) {
+                    document.getElementById('congrats-modal').classList.remove('hidden');
+                } else {
+                    nextBtn.classList.remove('hidden');
+                }
             } else {
                 state.streak = 0;
                 btnRef.classList.add('btn-wrong');
@@ -573,7 +580,8 @@
         }
 
         function skipExercise() {
-            state.exIdx++; state.stepIdx = 0;
+            state.exIdx++; 
+            state.stepIdx = 0;
             document.getElementById('blackboard-history').innerHTML = '';
             loadExercise();
         }
@@ -581,7 +589,8 @@
         function processNext(fromCongrats = false) {
             if(fromCongrats) {
                 state.points += 100;
-                state.exIdx++; state.stepIdx = 0;
+                state.exIdx++; 
+                state.stepIdx = 0;
                 document.getElementById('blackboard-history').innerHTML = '';
             } else {
                 state.stepIdx++;
@@ -612,11 +621,14 @@
             const ctx = canvas.getContext('2d');
             const w = canvas.width = canvas.offsetWidth;
             const h = canvas.height = canvas.offsetHeight;
+            if (h === 0) return;
             ctx.clearRect(0,0,w,h);
             const pts = state.history.slice(-15);
             const max = Math.max(...pts, 100);
             const step = w / (pts.length - 1 || 1);
-            ctx.beginPath(); ctx.strokeStyle = '#6366f1'; ctx.lineWidth = 3;
+            ctx.beginPath(); 
+            ctx.strokeStyle = '#6366f1'; 
+            ctx.lineWidth = 3;
             pts.forEach((p, i) => {
                 const x = i * step; const y = h - (p / max * (h - 30)) - 15;
                 if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
@@ -626,7 +638,9 @@
             ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.fill();
         }
 
-        window.onload = drawProgress;
+        window.onload = function() {
+            drawProgress();
+        };
     </script>
 </body>
 </html>
